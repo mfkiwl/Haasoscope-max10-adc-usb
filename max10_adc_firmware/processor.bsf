@@ -4,26 +4,25 @@ editor if you plan to continue editing the block that represents it in
 the Block Editor! File corruption is VERY likely to occur.
 */
 /*
-Copyright (C) 1991-2015 Altera Corporation. All rights reserved.
-Your use of Altera Corporation's design tools, logic functions 
+Copyright (C) 2018  Intel Corporation. All rights reserved.
+Your use of Intel Corporation's design tools, logic functions 
 and other software and tools, and its AMPP partner logic 
 functions, and any output files from any of the foregoing 
 (including device programming or simulation files), and any 
 associated documentation or information are expressly subject 
-to the terms and conditions of the Altera Program License 
-Subscription Agreement, the Altera Quartus II License Agreement,
-the Altera MegaCore Function License Agreement, or other 
-applicable license agreement, including, without limitation, 
-that your use is for the sole purpose of programming logic 
-devices manufactured by Altera and sold by Altera or its 
-authorized distributors.  Please refer to the applicable 
-agreement for further details.
+to the terms and conditions of the Intel Program License 
+Subscription Agreement, the Intel Quartus Prime License Agreement,
+the Intel FPGA IP License Agreement, or other applicable license
+agreement, including, without limitation, that your use is for
+the sole purpose of programming logic devices manufactured by
+Intel and sold by Intel or its authorized distributors.  Please
+refer to the applicable agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 376 896)
+	(rect 16 16 376 1120)
 	(text "processor" (rect 5 0 45 12)(font "Arial" ))
-	(text "inst" (rect 8 864 20 876)(font "Arial" ))
+	(text "inst" (rect 8 1088 20 1100)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -200,6 +199,13 @@ agreement for further details.
 		(line (pt 0 416)(pt 16 416)(line_width 3))
 	)
 	(port
+		(pt 0 432)
+		(input)
+		(text "usb_rxf" (rect 0 0 31 12)(font "Arial" ))
+		(text "usb_rxf" (rect 21 427 52 439)(font "Arial" ))
+		(line (pt 0 432)(pt 16 432)(line_width 1))
+	)
+	(port
 		(pt 360 32)
 		(output)
 		(text "txStart" (rect 0 0 25 12)(font "Arial" ))
@@ -258,22 +264,22 @@ agreement for further details.
 	(port
 		(pt 360 160)
 		(output)
-		(text "spare1" (rect 0 0 25 12)(font "Arial" ))
-		(text "spare1" (rect 314 155 339 167)(font "Arial" ))
+		(text "debug3" (rect 0 0 28 12)(font "Arial" ))
+		(text "debug3" (rect 311 155 339 167)(font "Arial" ))
 		(line (pt 360 160)(pt 344 160)(line_width 1))
 	)
 	(port
 		(pt 360 176)
 		(output)
-		(text "spare2" (rect 0 0 27 12)(font "Arial" ))
-		(text "spare2" (rect 312 171 339 183)(font "Arial" ))
+		(text "debug4" (rect 0 0 29 12)(font "Arial" ))
+		(text "debug4" (rect 310 171 339 183)(font "Arial" ))
 		(line (pt 360 176)(pt 344 176)(line_width 1))
 	)
 	(port
 		(pt 360 192)
 		(output)
-		(text "spare3" (rect 0 0 27 12)(font "Arial" ))
-		(text "spare3" (rect 312 187 339 199)(font "Arial" ))
+		(text "spare" (rect 0 0 22 12)(font "Arial" ))
+		(text "spare" (rect 317 187 339 199)(font "Arial" ))
 		(line (pt 360 192)(pt 344 192)(line_width 1))
 	)
 	(port
@@ -335,8 +341,8 @@ agreement for further details.
 	(port
 		(pt 360 336)
 		(output)
-		(text "writesamp[11..0]" (rect 0 0 62 12)(font "Arial" ))
-		(text "writesamp[11..0]" (rect 277 331 339 343)(font "Arial" ))
+		(text "writesamp[10..0]" (rect 0 0 63 12)(font "Arial" ))
+		(text "writesamp[10..0]" (rect 276 331 339 343)(font "Arial" ))
 		(line (pt 360 336)(pt 344 336)(line_width 3))
 	)
 	(port
@@ -510,15 +516,15 @@ agreement for further details.
 	(port
 		(pt 360 736)
 		(output)
-		(text "rdaddress2[ram_width-1..0]" (rect 0 0 107 12)(font "Arial" ))
-		(text "rdaddress2[ram_width-1..0]" (rect 232 731 339 743)(font "Arial" ))
+		(text "rdadtwo[ram_width-1..0]" (rect 0 0 93 12)(font "Arial" ))
+		(text "rdadtwo[ram_width-1..0]" (rect 246 731 339 743)(font "Arial" ))
 		(line (pt 360 736)(pt 344 736)(line_width 3))
 	)
 	(port
 		(pt 360 752)
 		(output)
-		(text "trigthresh2[7..0]" (rect 0 0 61 12)(font "Arial" ))
-		(text "trigthresh2[7..0]" (rect 278 747 339 759)(font "Arial" ))
+		(text "trigthreshtwo[7..0]" (rect 0 0 69 12)(font "Arial" ))
+		(text "trigthreshtwo[7..0]" (rect 270 747 339 759)(font "Arial" ))
 		(line (pt 360 752)(pt 344 752)(line_width 3))
 	)
 	(port
@@ -556,13 +562,111 @@ agreement for further details.
 		(text "nsmp[ram_width-1..0]" (rect 255 827 339 839)(font "Arial" ))
 		(line (pt 360 832)(pt 344 832)(line_width 3))
 	)
+	(port
+		(pt 360 848)
+		(output)
+		(text "outputclk" (rect 0 0 34 12)(font "Arial" ))
+		(text "outputclk" (rect 305 843 339 855)(font "Arial" ))
+		(line (pt 360 848)(pt 344 848)(line_width 1))
+	)
+	(port
+		(pt 360 864)
+		(output)
+		(text "phasecounterselect[2..0]" (rect 0 0 95 12)(font "Arial" ))
+		(text "phasecounterselect[2..0]" (rect 244 859 339 871)(font "Arial" ))
+		(line (pt 360 864)(pt 344 864)(line_width 3))
+	)
+	(port
+		(pt 360 880)
+		(output)
+		(text "phaseupdown" (rect 0 0 53 12)(font "Arial" ))
+		(text "phaseupdown" (rect 286 875 339 887)(font "Arial" ))
+		(line (pt 360 880)(pt 344 880)(line_width 1))
+	)
+	(port
+		(pt 360 896)
+		(output)
+		(text "phasestep" (rect 0 0 40 12)(font "Arial" ))
+		(text "phasestep" (rect 299 891 339 903)(font "Arial" ))
+		(line (pt 360 896)(pt 344 896)(line_width 1))
+	)
+	(port
+		(pt 360 912)
+		(output)
+		(text "scanclk" (rect 0 0 29 12)(font "Arial" ))
+		(text "scanclk" (rect 310 907 339 919)(font "Arial" ))
+		(line (pt 360 912)(pt 344 912)(line_width 1))
+	)
+	(port
+		(pt 360 928)
+		(output)
+		(text "ext_trig_delay[4..0]" (rect 0 0 77 12)(font "Arial" ))
+		(text "ext_trig_delay[4..0]" (rect 262 923 339 935)(font "Arial" ))
+		(line (pt 360 928)(pt 344 928)(line_width 3))
+	)
+	(port
+		(pt 360 944)
+		(output)
+		(text "noselftrig" (rect 0 0 35 12)(font "Arial" ))
+		(text "noselftrig" (rect 304 939 339 951)(font "Arial" ))
+		(line (pt 360 944)(pt 344 944)(line_width 1))
+	)
+	(port
+		(pt 360 960)
+		(output)
+		(text "usb_oe" (rect 0 0 29 12)(font "Arial" ))
+		(text "usb_oe" (rect 310 955 339 967)(font "Arial" ))
+		(line (pt 360 960)(pt 344 960)(line_width 1))
+	)
+	(port
+		(pt 360 976)
+		(output)
+		(text "usb_rd" (rect 0 0 28 12)(font "Arial" ))
+		(text "usb_rd" (rect 311 971 339 983)(font "Arial" ))
+		(line (pt 360 976)(pt 344 976)(line_width 1))
+	)
+	(port
+		(pt 360 992)
+		(output)
+		(text "usb_pwrsv" (rect 0 0 44 12)(font "Arial" ))
+		(text "usb_pwrsv" (rect 295 987 339 999)(font "Arial" ))
+		(line (pt 360 992)(pt 344 992)(line_width 1))
+	)
+	(port
+		(pt 360 1008)
+		(output)
+		(text "clk_rd" (rect 0 0 24 12)(font "Arial" ))
+		(text "clk_rd" (rect 315 1003 339 1015)(font "Arial" ))
+		(line (pt 360 1008)(pt 344 1008)(line_width 1))
+	)
+	(port
+		(pt 360 1024)
+		(output)
+		(text "nselftrigcoincidentreq[1..0]" (rect 0 0 100 12)(font "Arial" ))
+		(text "nselftrigcoincidentreq[1..0]" (rect 239 1019 339 1031)(font "Arial" ))
+		(line (pt 360 1024)(pt 344 1024)(line_width 3))
+	)
+	(port
+		(pt 360 1040)
+		(output)
+		(text "selftrigtempholdtime[7..0]" (rect 0 0 97 12)(font "Arial" ))
+		(text "selftrigtempholdtime[7..0]" (rect 242 1035 339 1047)(font "Arial" ))
+		(line (pt 360 1040)(pt 344 1040)(line_width 3))
+	)
+	(port
+		(pt 360 1056)
+		(output)
+		(text "allowsamechancoin" (rect 0 0 74 12)(font "Arial" ))
+		(text "allowsamechancoin" (rect 265 1051 339 1063)(font "Arial" ))
+		(line (pt 360 1056)(pt 344 1056)(line_width 1))
+	)
 	(parameter
 		"ram_width"
 		"12"
 		""
 		(type "PARAMETER_SIGNED_DEC")	)
 	(drawing
-		(rectangle (rect 16 16 344 864)(line_width 1))
+		(rectangle (rect 16 16 344 1088)(line_width 1))
 	)
 	(annotation_block (parameter)(rect 376 -64 476 16))
 )

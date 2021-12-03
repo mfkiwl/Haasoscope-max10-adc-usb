@@ -1232,21 +1232,21 @@ class Haasoscope():
                     ydatanew = ydatanew[1:len(ydatanew)]
                 if self.dooversample[thechan]==1: # account for oversampling, take the middle-most section
                     if self.sincresample>0:
-                        self.xydata[l][0]=xdatanew[self.sincresample+self.num_samples*self.sincresample/2:3*self.num_samples*self.sincresample/2:1] # for printing out or other analysis
-                        self.xydata[l][1]=ydatanew[self.sincresample+self.num_samples*self.sincresample/2:3*self.num_samples*self.sincresample/2:1]
+                        self.xydata[thechan][0]=xdatanew[self.sincresample+self.num_samples*self.sincresample/2:3*self.num_samples*self.sincresample/2:1] # for printing out or other analysis
+                        self.xydata[thechan][1]=ydatanew[self.sincresample+self.num_samples*self.sincresample/2:3*self.num_samples*self.sincresample/2:1]
                     else:
-                        self.xydata[l][0]=xdatanew[1+self.num_samples/2:3*self.num_samples/2:1] # for printing out or other analysis
-                        self.xydata[l][1]=ydatanew[1+self.num_samples/2:3*self.num_samples/2:1]
+                        self.xydata[thechan][0]=xdatanew[1+self.num_samples/2:3*self.num_samples/2:1] # for printing out or other analysis
+                        self.xydata[thechan][1]=ydatanew[1+self.num_samples/2:3*self.num_samples/2:1]
                 elif self.dooversample[thechan]==9: # account for over-oversampling, take the middle-most section
                      if self.sincresample>0:
-                         self.xydata[l][0]=xdatanew[self.sincresample+3*self.num_samples*self.sincresample/2:5*self.num_samples*self.sincresample/2:1] # for printing out or other analysis
-                         self.xydata[l][1]=ydatanew[self.sincresample+3*self.num_samples*self.sincresample/2:5*self.num_samples*self.sincresample/2:1]
+                         self.xydata[thechan][0]=xdatanew[self.sincresample+3*self.num_samples*self.sincresample/2:5*self.num_samples*self.sincresample/2:1] # for printing out or other analysis
+                         self.xydata[thechan][1]=ydatanew[self.sincresample+3*self.num_samples*self.sincresample/2:5*self.num_samples*self.sincresample/2:1]
                      else:
-                        self.xydata[l][0]=xdatanew[1+3*self.num_samples/2:5*self.num_samples/2:1] # for printing out or other analysis
-                        self.xydata[l][1]=ydatanew[1+3*self.num_samples/2:5*self.num_samples/2:1]
+                        self.xydata[thechan][0]=xdatanew[1+3*self.num_samples/2:5*self.num_samples/2:1] # for printing out or other analysis
+                        self.xydata[thechan][1]=ydatanew[1+3*self.num_samples/2:5*self.num_samples/2:1]
                 else: # the full data is stored
-                    self.xydata[l][0]=xdatanew # for printing out or other analysis
-                    self.xydata[l][1]=ydatanew
+                    self.xydata[thechan][0]=xdatanew # for printing out or other analysis
+                    self.xydata[thechan][1]=ydatanew
                 if len(self.lines)>thechan and self.domaindrawing: # we may not be drawing, so check!
                     self.lines[thechan].set_xdata(xdatanew)
                     self.lines[thechan].set_ydata(ydatanew)
@@ -1905,8 +1905,8 @@ class Haasoscope():
             self.tellserialdelaytimerwait()
             self.tellSPIsetup(0) #0.9V CM but not connected
             self.tellSPIsetup(11) #offset binary output
-            self.tellSPIsetup(24) #300 Ohm termination ChA
-            self.tellSPIsetup(25) #300 Ohm termination ChB
+            self.tellSPIsetup(22) #20:50 #22:150 #24:300 Ohm termination ChA
+            self.tellSPIsetup(23) #21:50 #23:150 #25:300 Ohm termination ChB
             #self.tellSPIsetup(30) # multiplexed output
             self.tellSPIsetup(32) # non-multiplexed output (less noise)
             self.setupi2c() # sets all ports to be outputs
