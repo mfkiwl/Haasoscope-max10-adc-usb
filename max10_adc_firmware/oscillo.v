@@ -2,7 +2,8 @@ module oscillo(clk, startTrigger, clk_flash, data_flash1, data_flash2, data_flas
 data_ready, wraddress_triggerpoint, imthelast, imthefirst,rollingtrigger,trigDebug,triggerpoint,downsample,
 trigthresh,trigchannels,triggertype,triggertot,format_sdin_out,div_sclk_out,outsel_cs_out,clk_spi,SPIsend,SPIsenddata,
 wraddress,Acquiring,SPIstate,clk_flash2,trigthreshtwo,dout1,dout2,dout3,dout4,highres,ext_trig_in,use_ext_trig, nsmp, trigout, spareright, spareleft,
-delaycounter,ext_trig_delay, noselftrig, nselftrigcoincidentreq, selftrigtempholdtime, allowsamechancoin);
+delaycounter,ext_trig_delay, noselftrig, nselftrigcoincidentreq, selftrigtempholdtime, allowsamechancoin,
+trigratecounter,trigratecountreset);
 input clk,clk_spi;
 input startTrigger;
 input [1:0] trig_in;
@@ -225,6 +226,20 @@ assign selfedgetrig = (trigchannels[0]&&selftrigtemp[0]&&nselftrigstemp[0]>=nsel
 wire selftrig; //trigger is an OR of all the channels which are active // also trigger every second or so (rolling)
 assign selftrig = selfedgetrig || (rollingtrigger&thecounter>=25000000) || (use_ext_trig&ext_trig_in_delayed);
 
+// trigger rate counter stuff
+output reg[31:0] trigratecounter=0;
+input trigratecountreset;
+reg [7:0] selfedgetrigdeadtime=0; // to keep track of deadtime for the trigger rate counter
+always @(posedge clk_flash) begin
+	if (selfedgetrig && selfedgetrigdeadtime==0) begin // only count it if the counter is not dead because a trigger fired recently
+		trigratecounter = trigratecounter+1;
+		selfedgetrigdeadtime<=selftrigtempholdtime; // trigger has fired, start counting down deadtime, from selftrigtempholdtime (same as used for coincidence trigger)
+	end
+	if (selfedgetrigdeadtime>0 && downsamplego) selfedgetrigdeadtime<=selfedgetrigdeadtime-1; // count down deadtime (paying attention to downsample) so the trigger stops being dead after selftrigtempholdtime
+	if (trigratecountreset) trigratecounter=0;
+end
+// end trigger rate counter stuff
+
 always @(posedge clk_flash)
 if (noselftrig) Trigger = trig_in[1]; // just trigger if we get a trigger in towards to right
 else if (imthefirst & imthelast) Trigger = selftrig; // we trigger if we triggered ourselves
@@ -271,8 +286,20 @@ always @(posedge clk_flash) begin
 	end
 end
 reg[1:0] Pulsecounter=0;
+reg[3:0] trig_ext_out=4'd0;
 always @(posedge clk_flash) begin
-	trigout[0]<=(Ttrig[Pulsecounter]);
+	if (noselftrig) trigout[0]<=(Ttrig[Pulsecounter]);
+	else begin
+		if (Trigger) begin
+			trig_ext_out<=4'd10;//time to fire trig_ext_out for (max 15)
+			trigout[0]<=1'b1;
+		end
+		else if (trig_ext_out>4'd0) begin
+			trig_ext_out<=trig_ext_out-4'd1;
+			trigout[0]<=1'b1;
+		end
+		else trigout[0]<=1'b0;
+	end
 	Pulsecounter<=Pulsecounter+1; // for iterating through the trigger bins
 end
 assign spareright = spareleft; // pass the calibration signal along to the right

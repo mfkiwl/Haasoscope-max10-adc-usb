@@ -9,8 +9,8 @@ i2c_ena,i2c_addr,i2c_rw,i2c_datawr,i2c_datard,i2c_busy,i2c_ackerror,   usb_clk60
 rdadtwo,trigthreshtwo, debug1,debug2,chip_id, highres,  use_ext_trig,  digital_buffer1, nsmp, outputclk,
 phasecounterselect,phaseupdown,phasestep,scanclk,
 ext_trig_delay, noselftrig, usb_oe, usb_rd, usb_rxf, usb_pwrsv, clk_rd,
-nselftrigcoincidentreq, selftrigtempholdtime, allowsamechancoin
-);
+nselftrigcoincidentreq, selftrigtempholdtime, allowsamechancoin,
+trigratecounter,trigratecountreset);
    input clk;
 	input[7:0] rxData;
    input rxReady;
@@ -80,8 +80,11 @@ nselftrigcoincidentreq, selftrigtempholdtime, allowsamechancoin
 	output reg[4:0] ext_trig_delay=0;
 	output reg noselftrig=0;
 	output reg[1:0] nselftrigcoincidentreq=0; // how many additional coincident channels to require for self trigger
-	output reg[7:0] selftrigtempholdtime=10; // how long to fire a channel for
+	output reg[7:0] selftrigtempholdtime=10; // how long to fire a channel for, to use for coincidence (and now the trigger rate counter too)
 	output reg allowsamechancoin=0; // whether to allow same channel, firing in the past, to count as coincidence
+	
+	input [31:0] trigratecounter;
+	output reg trigratecountreset=0;
 	
 	output reg i2c_ena;
 	output reg [6:0] i2c_addr;
@@ -262,6 +265,7 @@ nselftrigcoincidentreq, selftrigtempholdtime, allowsamechancoin
 		  send_fast_usb2=0;
 		  addonetoextradata=0;
 		  serialdelaycounter=0;
+		  trigratecountreset=0;
         if (rxReady) begin
 			 readdata = rxData;
           state = SOLVING;
@@ -847,7 +851,7 @@ nselftrigcoincidentreq, selftrigtempholdtime, allowsamechancoin
 				end
 				else begin
 					ioCountToSend = 1;
-					data[0]=21; // this is the firmware version
+					data[0]=22; // this is the firmware version
 					state=WRITE1;
 				end
 				
@@ -894,7 +898,7 @@ nselftrigcoincidentreq, selftrigtempholdtime, allowsamechancoin
 				end
 			end
 			else if (readdata==149) begin
-				byteswanted=1;//wait for next byte which is how long to hold the self trigger active for (for coincidence purposes)
+				byteswanted=1;//wait for next byte which is how long to hold the self trigger active for (for coincidence purposes, and now trigger rate counter deadtime too)
 				comdata=readdata;
 				newcomdata=1; //pass it on
 				if (bytesread<byteswanted) state=READMORE;
@@ -909,7 +913,23 @@ nselftrigcoincidentreq, selftrigtempholdtime, allowsamechancoin
 				comdata=readdata;
 				newcomdata=1; //pass it on
 				state=READ;
-			end			
+			end
+			else if (readdata==151) begin // send the number of triggers, and reset
+				if (serial_passthrough) begin
+					comdata=readdata;
+					newcomdata=1; //pass it on
+					state=READ;
+				end
+				else begin
+					data[0]=trigratecounter[7+8*0:8*0];
+					data[1]=trigratecounter[7+8*1:8*1];
+					data[2]=trigratecounter[7+8*2:8*2];
+					data[3]=trigratecounter[7+8*3:8*3];
+					ioCountToSend = 4; // send 4 bytes
+					trigratecountreset=1;
+					state=WRITE1;
+				end
+			end
 			
 			else state=READ; // if we got some other command, just ignore it
       end
