@@ -102,6 +102,7 @@ class MainWindow(TemplateBaseClass):
         self.otherlines = []
         self.savetofile=False # save scope data to file
         self.doh5=False # use the h5 binary file format
+        self.numrecordeventsperfile=1000 # number of events in each file to record before opening new file
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updateplot)
         self.timer2 = QtCore.QTimer()
@@ -732,6 +733,9 @@ class MainWindow(TemplateBaseClass):
             except SerialException:
                 print("Serial exception getting channels!!")
                 sys.exit(1)
+            except DeviceError:
+                print("Device error")
+                sys.exit(1)
             if status==2: self.selectchannel() #we updated the switch data
             if d.db: print(time.time()-d.oldtime,"done with evt",self.nevents)
             self.nevents += 1
@@ -749,7 +753,12 @@ class MainWindow(TemplateBaseClass):
                 newrecordedchannellength=int(max(10,5*lastrate)) #the number of events to show on the persist plot
                 if newrecordedchannellength<len(d.recordedchannel):
                     del d.recordedchannel[0:len(d.recordedchannel)-newrecordedchannellength]
-                d.recordedchannellength=newrecordedchannellength 
+                d.recordedchannellength=newrecordedchannellength
+            if self.nevents%self.numrecordeventsperfile==0:
+                if self.savetofile: # if writing, close and open new file
+                    self.record()
+                    if self.doh5: self.oldxscale=0 #to force writing the time header info in h5
+                    self.record()
             if d.getone and not d.timedout: self.dostartstop()
 
     def drawtext(self): # happens once per second
@@ -801,6 +810,7 @@ if __name__ == '__main__':
 
     d = HaasoscopeLibQt.Haasoscope()
 
+    script=""
     trigboardport = ""
     for a in sys.argv:
         if a[0] == "-":
@@ -812,6 +822,9 @@ if __name__ == '__main__':
                 d.dofastusb = True
                 d.dousbparallel = True
                 print("dofastusb", d.dofastusb, "and dousbparallel", d.dousbparallel)
+            elif a[1:7] == "script": #eg: -scriptmysetup.py will run those commands after setup
+                script = str(a[7:])
+                print("script set to", script)
             elif a[1] == "s" and a[2]!="r":
                 d.serialdelaytimerwait = int(a[2:])
                 print("serialdelaytimerwait set to", d.serialdelaytimerwait)
@@ -820,24 +833,17 @@ if __name__ == '__main__':
                 print("serial port manually set to", d.serport)
             elif a[1] == "t":
                 trigboardport = a[2:]
-                print("trigboardport set to", trigboardport)
+                print("trigboardport set to", trigboardport)            
 
     if d.domt and not d.dofastusb:
         print("mt option is only for fastusb - exiting!")
         sys.exit()
 
-    # can change some things after initialization
-    # d.selectedchannel=0
-    # d.tellswitchgain(d.selectedchannel)
-    # d.togglesupergainchan(d.selectedchannel)
-    # d.toggletriggerchan(d.selectedchannel)
-    # d.togglelogicanalyzer() # run the logic analyzer
-    # d.sendi2c("21 13 f0") # set extra pins E24 B0,1,2,3 off and B4,5,6,7 on (works for v8 only)
-
     print("Python version", sys.version)
     app = QtWidgets.QApplication.instance()
     standalone = app is None
     if standalone:
+        #print('INSIDE STANDALONE')
         app = QtWidgets.QApplication(sys.argv)
 
     try:
@@ -848,7 +854,7 @@ if __name__ == '__main__':
         win.setWindowTitle('Haasoscope Qt')
         if not d.setup_connections():
             print("Exiting now - failed setup_connections!")
-            sys.exit()
+            sys.exit(1)
         if trigboardport!="":
             if trigboardport=="auto": trigboardport=d.trigserport
             trigboard = HaasoscopeTrigLibQt.HaasoscopeTrig(trigboardport)
@@ -862,12 +868,12 @@ if __name__ == '__main__':
             d.cleanup()
             sys.exit()
         win.launch()
-
-        #turns off drawing
-        #win.ui.drawingCheck.setCheckState(QtCore.Qt.Unchecked)
-        #win.drawing()
-
         win.triggerposchanged(128)  # center the trigger
+
+        if script != "":
+            print("Excecuting file", script)
+            exec(open(script).read())
+
         win.dostartstop()
     except SerialException:
         print("serial com failed!")

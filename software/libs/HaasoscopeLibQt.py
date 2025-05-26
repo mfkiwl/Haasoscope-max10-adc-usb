@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
-
+import traceback
 #print("Loading HaasoscopeLibQt.py")
 
 # You might adjust these, just override them before instantianting a class
@@ -53,6 +53,7 @@ if enable_fastusb:
         useftdi = not useftd2xx
         if useftd2xx:
             import ftd2xx as ftd
+            from ftd2xx.ftd2xx import DeviceError
         if useftdi:
             from pyftdi.ftdi import Ftdi
             ftdiattempts=300 # number of times to try reading - basically a timeout
@@ -118,6 +119,7 @@ class Haasoscope():
         self.flyingfast = False # to just read as fast as possible
         self.domt=False #whether to have separate threads per board
         self.dotriggercounter = 2 # how ofter to update trigger counter (in seconds) (set to 0 to turn off)
+        self.doswitchdata = True # whether to read the switch data
         self.db = False #debugging #True #False
     
         self.dolockin=False # read lockin info
@@ -1357,8 +1359,11 @@ class Haasoscope():
                             bwant = self.num_bytes+padding*num_chan_per_board
                             if useftd2xx or not self.dofastusb: rslt = self.usbser[usb].read(bwant) # try to get data from the board
                             elif useftdi: rslt = self.usbser[usb].read_data_bytes(bwant, ftdiattempts)
-                        except ftd.DeviceError as msgnum:
-                            print("Error reading from USB2", usb, msgnum)
+                        except DeviceError as e:
+                            print("Exception Message:", str(e))
+                            traceback.print_exc()
+                        except Exception as e:
+                            print(type(e).__name__, "Error reading from USB2", usb)
                             return
                         if len(rslt)==self.num_bytes+padding*num_chan_per_board:
                             print(time.time() - self.oldtime,"   got the right nbytes for board",bn,"from usb",usb)
@@ -1423,8 +1428,12 @@ class Haasoscope():
                 else:
                     rslt = self.usbser[self.usbsermap[board]].read(self.num_bytes)
                 # self.ser.write(bytearray([40+board])) # for debugging timing, does nuttin
-            except ftd.DeviceError as msgnum:
-                print("Error reading from USB2", self.usbsermap[board], msgnum)
+            except DeviceError as e:
+                print("Exception occurred in getdata()")
+                traceback.print_exc()
+                raise DeviceError(str(e))
+            except Exception as e:
+                print(type(e).__name__, "Error reading from USB2", self.usbsermap[board])
                 return
         else:
             rslt = self.ser.read(int(self.num_bytes))
@@ -1478,8 +1487,11 @@ class Haasoscope():
                                 self.usbser[self.usbsermap[board]].purge(ftd.defines.PURGE_RX)
                     else:
                         rslt = self.usbser[self.usbsermap[board]].read(logicbytes)
-                except ftd.DeviceError as msgnum:
-                    print("Error reading from USB2", self.usbsermap[board], msgnum)
+                except DeviceError as e:
+                    print("Exception Message:", str(e))
+                    traceback.print_exc()
+                except Exception as e:
+                    print(type(e).__name__, "Error reading from USB2", self.usbsermap[board])
                     return
             else:
                 rslt = self.ser.read(logicbytes)
@@ -1629,7 +1641,7 @@ class Haasoscope():
                 self.on_running(self.ydata, bn) #update data in main window
                 if self.db: print(time.time()-self.oldtime,"done with board",bn)
         status=1
-        if self.minfirmwareversion>=15 and self.dodrawing and self.rollingtrigger: #v9.0 and up
+        if self.minfirmwareversion>=15 and self.dodrawing and self.rollingtrigger and self.doswitchdata: #v9.0 and up
             thetime2=time.time()
             elapsedtime=thetime2-self.oldtime2
             if elapsedtime>1.0:
@@ -1642,6 +1654,7 @@ class Haasoscope():
 
     #get the positions of the dpdt switches from IO expander 2B, and then take action (v9.0 and up!)
     havereadswitchdata=False
+    switchdebug = False
     def getswitchdata(self,board):
         if self.minfirmwareversion>=17:
             self.ser.write(bytearray([53,board]))  # make the next board active (serial_passthrough 0)
@@ -1654,12 +1667,12 @@ class Haasoscope():
         rslt = self.ser.read(1)
         if len(rslt)>0:# and i==1:
             byte_array = unpack('%dB'%len(rslt),rslt)
-            #print("i2c data from board",board,"IO 2B",bin(byte_array[0]))
+            if self.switchdebug: print("i2c data from board",board,"IO 2B",bin(byte_array[0]))
             newswitchpos=byte_array[0]
             if newswitchpos!=self.switchpos[board] or not self.havereadswitchdata:
                 for b in range(8):
                     if self.testBit(newswitchpos,b) != self.testBit(self.switchpos[board],b) or not self.havereadswitchdata:
-                        #print "switch",b,"is now",self.testBit(newswitchpos,b)
+                        if self.switchdebug: print("switch",b,"is now",self.testBit(newswitchpos,b))
                         #switch 0-3 is 50/1M Ohm termination on channels 0-3, on is 1M, off is 50
                         #switch 4-7 is super/normal gain on channels 0-3, on is super, off is normal
                         if b>=4:
